@@ -2,25 +2,56 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"net/http"
+	"net/url"
 
-	_ "github.com/joho/godotenv/autoload"
+	ics "github.com/arran4/golang-ical"
+	"github.com/gin-gonic/gin"
 )
 
-var TIMETABLE_URL = os.Getenv("TIMETABLE_URL")
+func TransformCalendar(calendar *ics.Calendar) {
+	for _, event := range calendar.Events() {
+		description := GetCleanEventDescription(event)
+
+		name := GetModuleNameFromString(description)
+		activity := GetActivityTypeFromString(description)
+
+		if name == "" {
+			name = GetModuleCodeFromString(description)
+		}
+
+		cleanTitle := fmt.Sprintf("(%v) %v", activity, name)
+		event.SetSummary(cleanTitle)
+	}
+}
 
 func main() {
-	fmt.Println("Hello, World!")
+	r := gin.Default()
 
-	calendar, err := fetchCalendarFromURL(TIMETABLE_URL)
-	if err != nil {
-		fmt.Printf("error loading calendar: %v", err)
-	}
+	r.UseRawPath = true
+	r.UnescapePathValues = false
 
-	fmt.Println(len(calendar.Events()))
+	r.GET("/:timetable", func(c *gin.Context) {
+		timetable_url, _ := url.QueryUnescape(c.Params.ByName("timetable"))
 
-	for _, event := range calendar.Events() {
-		name, _ := getModuleName(event)
-		fmt.Printf("%v\n", name)
-	}
+		_, err := url.Parse(timetable_url)
+		if err != nil {
+			c.String(http.StatusBadRequest, "invalid timetable url")
+			return
+		}
+
+		calendar, err := fetchCalendarFromURL(timetable_url)
+		if err != nil {
+			c.String(http.StatusInternalServerError, "couldn't parse timetable")
+			return
+		}
+
+		TransformCalendar(calendar)
+		c.Writer.Header().Set("Content-Type", "text/calendar")
+		c.Writer.Header().Set("Content-Disposition", "attachment; filename=\"calendar.ics\"")
+		calendar.SerializeTo(c.Writer)
+		c.Status(200)
+	})
+
+	r.Run()
 }
