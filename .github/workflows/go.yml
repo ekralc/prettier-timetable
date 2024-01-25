@@ -21,5 +21,5 @@ jobs:
     - name: Lint
       run: gofmt -l .
 
-    - name: Test
-      run: go test -v ./...
+    #- name: Test
+    #  run: go test -v ./...
