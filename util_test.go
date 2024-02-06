@@ -23,3 +23,20 @@ func TestGetActivityTypeBasic(t *testing.T) {
 		t.Errorf("got %v, want %v", ans, "Lecture")
 	}
 }
+
+func TestUrlAllowedAccepts(t *testing.T) {
+	url := "https://mytimetable.leeds.ac.uk/foobar"
+	allowed := UrlAllowed(url)
+	if !allowed {
+		t.Errorf("got %v, want %v", allowed, true)
+	}
+}
+
+func TestUrlAllowedRejects(t *testing.T) {
+	urls := []string{"https://google.com", "www.example.com", "http://malicioussite.com", "ftp://somewhere", "random_protocol://hello"}
+	for _, url := range urls {
+		if UrlAllowed(url) {
+			t.Errorf("%v should not be allowed by the filter", url)
+		}
+	}
+}

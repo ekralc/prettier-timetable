@@ -9,6 +9,8 @@ import (
 	ics "github.com/arran4/golang-ical"
 )
 
+const TIMETABLE_ALLOWED_PREFIX = "https://mytimetable.leeds.ac.uk"
+
 func TransformCalendar(calendar *ics.Calendar) {
 	for _, event := range calendar.Events() {
 		description := GetCleanEventDescription(event)
@@ -64,4 +66,9 @@ func GetModuleCodeFromString(s string) string {
 
 func GetActivityTypeFromString(s string) string {
 	return GetFieldFromEventDescription(s, "Activity/Session Type")
+}
+
+// UrlAllowed returns if a user-provided URL should be considered 'safe' to fetch
+func UrlAllowed(url string) bool {
+	return strings.HasPrefix(url, TIMETABLE_ALLOWED_PREFIX)
 }
