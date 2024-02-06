@@ -11,12 +11,25 @@ import (
 
 const TIMETABLE_ALLOWED_PREFIX = "https://mytimetable.leeds.ac.uk"
 
-func TransformCalendar(calendar *ics.Calendar) {
+func TransformCalendar(calendar *ics.Calendar, selection []string, include bool) *ics.Calendar {
+	newCalendar := ics.NewCalendar()
 	for _, event := range calendar.Events() {
 		description := GetCleanEventDescription(event)
 
-		name := GetModuleNameFromString(description)
+		// Filter event types
+		in_selection := false
 		activity := GetActivityTypeFromString(description)
+		for _, activity_selection := range selection {
+			if activity == activity_selection {
+				in_selection = true
+				break
+			}
+		}
+		if (in_selection && !include) || (!in_selection && include) {
+			continue
+		}
+
+		name := GetModuleNameFromString(description)
 
 		if name == "" {
 			name = GetModuleCodeFromString(description)
@@ -24,7 +37,10 @@ func TransformCalendar(calendar *ics.Calendar) {
 
 		cleanTitle := fmt.Sprintf("(%v) %v", activity, name)
 		event.SetSummary(cleanTitle)
+		newCalendar.AddVEvent(event)
 	}
+
+	return newCalendar
 }
 
 func FetchCalendarFromURL(url string) (*ics.Calendar, error) {

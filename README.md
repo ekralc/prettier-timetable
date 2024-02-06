@@ -5,3 +5,7 @@ The service acts as proxy for MyTimetable by fetching the calendar from the prov
 
 To use the service, point your calendar app to: `https://timetable.jclarke.tech/<URL encoded MyTimetable link>`.
 
+To filter events, specify the `include` or `exclude` query parameter as a comma separated list of activity types
+
+**Example:** `https://timetable.jclarke.tech/<URL encoded MyTimetable link>?include=Activity1,Activity2`
+> Note: include will override exclude if both are specified
