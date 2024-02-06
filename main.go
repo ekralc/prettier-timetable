@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,17 +15,24 @@ func RequestHandler(c *gin.Context) {
 		c.String(http.StatusBadRequest, "Invalid URL. Please request with a URL-encoded MyTimetable link.")
 	}
 
-	calendar, err := FetchCalendarFromURL(timetable_url)
+	exclude_list := []string{}
+	exclude_param := c.Query("exclude")
+	if exclude_param != "" {
+		exclude_param_list := strings.Split(exclude_param, ",")
+		exclude_list = append(exclude_list, exclude_param_list...)
+	}
+
+	raw_calendar, err := FetchCalendarFromURL(timetable_url)
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Error parsing timetable")
 		return
 	}
 
-	TransformCalendar(calendar)
+	transformed_calendar := TransformCalendar(raw_calendar, exclude_list)
 
 	c.Writer.Header().Set("Content-Type", "text/calendar")
 	c.Writer.Header().Set("Content-Disposition", "attachment; filename=\"calendar.ics\"")
-	calendar.SerializeTo(c.Writer)
+	transformed_calendar.SerializeTo(c.Writer)
 
 	c.Status(200)
 }
