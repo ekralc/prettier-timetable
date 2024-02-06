@@ -11,21 +11,21 @@ import (
 
 const TIMETABLE_ALLOWED_PREFIX = "https://mytimetable.leeds.ac.uk"
 
-func TransformCalendar(calendar *ics.Calendar, exclude_list []string) *ics.Calendar {
+func TransformCalendar(calendar *ics.Calendar, selection []string, include bool) *ics.Calendar {
 	newCalendar := ics.NewCalendar()
 	for _, event := range calendar.Events() {
 		description := GetCleanEventDescription(event)
 
-		// Filter out event types
-		skip := false
+		// Filter event types
+		in_selection := false
 		activity := GetActivityTypeFromString(description)
-		for _, exclude := range exclude_list {
-			if activity == exclude {
-				skip = true
+		for _, activity_selection := range selection {
+			if activity == activity_selection {
+				in_selection = true
 				break
 			}
 		}
-		if skip {
+		if (in_selection && !include) || (!in_selection && include) {
 			continue
 		}
 

@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strings"
 
+	ics "github.com/arran4/golang-ical"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,6 +14,13 @@ func RequestHandler(c *gin.Context) {
 	timetable_url, err := url.QueryUnescape(c.Params.ByName("timetable"))
 	if err != nil || !UrlAllowed(timetable_url) {
 		c.String(http.StatusBadRequest, "Invalid URL. Please request with a URL-encoded MyTimetable link.")
+	}
+
+	include_list := []string{}
+	include_param := c.Query("include")
+	if include_param != "" {
+		include_param_list := strings.Split(include_param, ",")
+		include_list = append(include_list, include_param_list...)
 	}
 
 	exclude_list := []string{}
@@ -28,8 +36,12 @@ func RequestHandler(c *gin.Context) {
 		return
 	}
 
-	transformed_calendar := TransformCalendar(raw_calendar, exclude_list)
-
+	var transformed_calendar *ics.Calendar
+	if len(include_list) > 0 {
+		transformed_calendar = TransformCalendar(raw_calendar, include_list, true)
+	} else {
+		transformed_calendar = TransformCalendar(raw_calendar, exclude_list, false)
+	}
 	c.Writer.Header().Set("Content-Type", "text/calendar")
 	c.Writer.Header().Set("Content-Disposition", "attachment; filename=\"calendar.ics\"")
 	transformed_calendar.SerializeTo(c.Writer)
