@@ -3,5 +3,5 @@ Rewrites the MyTimetable iCal feed to be more human-readable. For example, the t
 
 The service acts as proxy for MyTimetable by fetching the calendar from the provided URL, rewriting event titles and returning it as usual. 
 
-To use the service, point your calendar app to: `https://timetable.jclarke.tech/<URL encoded MyTimetable link>`.
+To use the service, take your MyTimetable iCal URL and replace the domain with `timetable.jclarke.tech`, e.g. `https://mytimetable.leeds.ac.uk/eu=foo&h=bar` becomes `https://timetable.jclarke.tech/eu=foo&h=bar`
 
