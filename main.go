@@ -11,7 +11,7 @@ func RequestHandler(c *gin.Context) {
 	// We expect a URL encoded timetable URL
 	timetable_url, err := url.QueryUnescape(c.Params.ByName("timetable"))
 	if err != nil || !UrlAllowed(timetable_url) {
-		c.String(http.StatusBadRequest, "Invalid URL. Please request with a URL-encoded mytimetable link.")
+		c.String(http.StatusBadRequest, "Invalid URL. Please request with a URL-encoded MyTimetable link.")
 	}
 
 	calendar, err := FetchCalendarFromURL(timetable_url)
