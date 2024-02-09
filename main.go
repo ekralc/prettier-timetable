@@ -54,7 +54,10 @@ func BackwardsCompatibleRequestHandler(c *gin.Context) {
 }
 
 func main() {
-	r := gin.Default()
+	r := gin.New()
+	r.Use(
+		gin.Recovery(),
+	)
 
 	// These settings are necessary to process URL encoded parameters
 	r.UseRawPath = true
