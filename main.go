@@ -14,8 +14,8 @@ func RequestHandler(c *gin.Context) {
 		return
 	}
 
-	timetable_url := fmt.Sprintf("https://mytimetable.leeds.ac.uk%v", c.Request.RequestURI)
-	calendar, err := FetchCalendarFromURL(timetable_url)
+	timetableUrl := fmt.Sprintf("https://mytimetable.leeds.ac.uk%v", c.Request.RequestURI)
+	calendar, err := FetchCalendarFromURL(timetableUrl)
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Error parsing timetable")
 		return
@@ -32,13 +32,13 @@ func RequestHandler(c *gin.Context) {
 
 func BackwardsCompatibleRequestHandler(c *gin.Context) {
 	// We expect a URL encoded timetable URL
-	timetable_url, err := url.QueryUnescape(c.Params.ByName("timetable"))
-	if err != nil || !UrlAllowed(timetable_url) {
+	timetableUrl, err := url.QueryUnescape(c.Params.ByName("timetable"))
+	if err != nil || !UrlAllowed(timetableUrl) {
 		c.String(http.StatusBadRequest, "Invalid URL. Please request with a URL-encoded MyTimetable link.")
 		return
 	}
 
-	calendar, err := FetchCalendarFromURL(timetable_url)
+	calendar, err := FetchCalendarFromURL(timetableUrl)
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Error parsing timetable")
 		return
@@ -60,7 +60,9 @@ func main() {
 	r.UseRawPath = true
 	r.UnescapePathValues = false
 
-	r.GET("/:timetable", BackwardsCompatibleRequestHandler)
 	r.GET("/ical", RequestHandler)
+	// Deprecated
+	r.GET("/:timetable", BackwardsCompatibleRequestHandler)
+
 	r.Run()
 }
