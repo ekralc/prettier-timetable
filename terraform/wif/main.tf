@@ -16,7 +16,18 @@ resource "google_project_service" "main" {
   disable_dependent_services = true
 }
 
-module "service_account" {
+module "cr_service_account" {
+  source  = "terraform-google-modules/service-accounts/google"
+  version = "~> 3.0"
+
+  project_id   = var.project_id
+  names        = ["cloud-run-service"]
+  display_name = "Cloud Run Service"
+  description  = "Blank service account to assign to the Cloud Run service"
+  project_roles = []
+}
+
+module "gh_service_account" {
   source  = "terraform-google-modules/service-accounts/google"
   version = "~> 3.0"
 
@@ -26,10 +37,11 @@ module "service_account" {
   description  = "Terraform managed account used by GitHub Actions pipelines"
   project_roles = [
     "${var.project_id}=>roles/run.admin",
-    "${var.project_id}=>roles/artifactregistry.admin",
     "${var.project_id}=>roles/storage.objectAdmin",
     "${var.project_id}=>roles/iam.serviceAccountUser", 
     "${var.project_id}=>roles/cloudbuild.builds.editor", 
+    "${var.project_id}=>roles/serviceusage.serviceUsageConsumer", 
+    "${var.project_id}=>roles/viewer", 
   ]
 }
 
@@ -42,7 +54,7 @@ module "gh_oidc" {
   provider_id = "github-wif"
   sa_mapping = {
     "github-actions" = {
-      sa_name   = "projects/${var.project_id}/serviceAccounts/${module.service_account.email}"
+      sa_name   = "projects/${var.project_id}/serviceAccounts/${module.gh_service_account.email}"
       attribute = "attribute.repository/${var.github_repository}"
     }
   }

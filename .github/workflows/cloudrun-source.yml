@@ -1,0 +1,46 @@
+name: Deploy to Cloud Run from Source
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  PROJECT_ID: ${{ vars.PROJECT_ID }} 
+  SERVICE: ${{ vars.SERVICE }}
+  REGION: ${{ vars.REGION }}
+
+jobs:
+  deploy:
+    # Add 'id-token' with the intended permissions for workload identity federation
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Google Auth
+        id: auth
+        uses: 'google-github-actions/auth@v1'
+        with:
+          workload_identity_provider: '${{ secrets.PROVIDER_NAME }}'
+          service_account: '${{ secrets.SA_EMAIL }}'
+
+      - name: Deploy to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v1
+        with:
+          service: ${{ env.SERVICE }}
+          region: ${{ env.REGION }}
+          # NOTE: If required, update to the appropriate source folder
+          source: ./
+          env_vars: |
+                  GIN_MODE=release
+          flags: '--service-account ${{ secrets.CR_SA_EMAIL }}'
+
+      # If required, use the Cloud Run url output in later steps
+      - name: Show Output
+        run: echo ${{ steps.deploy.outputs.url }}
